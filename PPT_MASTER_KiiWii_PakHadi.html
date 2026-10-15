@@ -1,0 +1,1603 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>KiiWii.Bee — Mobile Stock Opname Scanner Proposal | Fleek Agency</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Outfit:wght@400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Anime.js & HTML5-QRCode Scanner CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+  <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+
+  <style>
+    /* ============================================================
+       FLEEK ARASAKA CYBER-DARK + KIIWII FASHION TERRACOTTA THEME
+       ============================================================ */
+    :root {
+      --home-bg: #111110;
+      --home-fg-1: #f6f4f2;
+      --home-fg-2: #a1a1aa;
+      --home-fg-3: #71717a;
+      --home-accent: #FF0033;
+      --kiiwii-terracotta: #e07a5f;
+      --kiiwii-terracotta-glow: rgba(224, 122, 95, 0.28);
+      --kiiwii-terracotta-dim: rgba(224, 122, 95, 0.12);
+      --kiiwii-cyan: #06b6d4;
+      --kiiwii-cyan-dim: rgba(6, 182, 212, 0.12);
+      --kiiwii-green: #10b981;
+      --kiiwii-green-dim: rgba(16, 185, 129, 0.12);
+      --kiiwii-amber: #f59e0b;
+      --kiiwii-amber-dim: rgba(245, 158, 11, 0.12);
+      --kiiwii-red: #ef4444;
+      --card-bg: #181817;
+      --card-border: #282826;
+      --window-border: #333330;
+      --surface-hover: #222220;
+
+      --font-outfit: 'Outfit', sans-serif;
+      --font-space: 'Space Grotesk', sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+
+      --header-height: 52px;
+    }
+
+    [data-theme="light"] {
+      --home-bg: #f8fafc;
+      --home-fg-1: #0f172a;
+      --home-fg-2: #475569;
+      --home-fg-3: #64748b;
+      --card-bg: #ffffff;
+      --card-border: #e2e8f0;
+      --window-border: #cbd5e1;
+      --surface-hover: #f1f5f9;
+      --kiiwii-terracotta-dim: rgba(224, 122, 95, 0.08);
+      --kiiwii-cyan-dim: rgba(6, 182, 212, 0.08);
+      --kiiwii-green-dim: rgba(16, 185, 129, 0.08);
+      --kiiwii-amber-dim: rgba(245, 158, 11, 0.08);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      background-color: var(--home-bg);
+      color: var(--home-fg-1);
+      font-family: var(--font-space);
+      overflow: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* CRT Scanlines Grid Overlay */
+    .crt-scanlines {
+      position: fixed;
+      top: 0; left: 0; width: 100vw; height: 100vh;
+      background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%),
+                  linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+      background-size: 100% 3px, 4px 100%;
+      pointer-events: none;
+      z-index: 999;
+      opacity: 0.45;
+    }
+    [data-theme="light"] .crt-scanlines { opacity: 0.08; }
+
+    /* Top Status Bar */
+    .floating-status-bar {
+      position: fixed;
+      top: 0; left: 0; width: 100vw; height: var(--header-height);
+      background: rgba(17, 17, 16, 0.94);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--card-border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 1.25rem;
+      z-index: 900;
+    }
+    [data-theme="light"] .floating-status-bar { background: rgba(248, 250, 252, 0.94); }
+
+    .brand-section {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      font-size: 0.85rem;
+    }
+    .brand-badge {
+      background: var(--kiiwii-terracotta);
+      color: #000;
+      font-family: var(--font-outfit);
+      font-weight: 800;
+      font-size: 0.65rem;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.5px;
+    }
+    .brand-title {
+      font-family: var(--font-outfit);
+      font-weight: 800;
+      color: var(--home-fg-1);
+      letter-spacing: 0.5px;
+    }
+    .brand-divider { color: var(--card-border); }
+    .brand-sub { color: var(--home-fg-2); font-size: 0.78rem; }
+
+    .status-section {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    .live-indicator {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-family: var(--font-mono);
+      font-size: 0.68rem;
+      color: var(--kiiwii-green);
+    }
+    .live-dot {
+      width: 7px;
+      height: 7px;
+      background: var(--kiiwii-green);
+      border-radius: 50%;
+      box-shadow: 0 0 8px var(--kiiwii-green);
+      animation: pulseDot 1.8s infinite;
+    }
+    @keyframes pulseDot {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.85); }
+    }
+    .stamp-confidential {
+      font-family: var(--font-mono);
+      font-size: 0.62rem;
+      padding: 3px 8px;
+      border: 1px solid var(--kiiwii-terracotta);
+      color: var(--kiiwii-terracotta);
+      border-radius: 4px;
+      background: var(--kiiwii-terracotta-dim);
+      letter-spacing: 0.5px;
+    }
+
+    /* Top Progress Bar */
+    .top-progress-bar-wrap {
+      position: fixed;
+      top: var(--header-height);
+      left: 0;
+      width: 100vw;
+      height: 3px;
+      background: var(--card-border);
+      z-index: 910;
+    }
+    .top-progress-bar-fill {
+      height: 100%;
+      width: 14.28%;
+      background: linear-gradient(90deg, var(--kiiwii-terracotta), var(--kiiwii-cyan));
+      transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* Slides Container & Panels */
+    .slides-container {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+    }
+    .slide-panel {
+      position: absolute;
+      top: 0; left: 0; width: 100vw; height: 100vh;
+      padding-top: calc(var(--header-height) + 14px);
+      padding-bottom: 70px;
+      overflow-y: auto;
+      overflow-x: hidden;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.35s ease, visibility 0.35s ease;
+      display: flex;
+      flex-direction: column;
+    }
+    .slide-panel.active {
+      opacity: 1;
+      visibility: visible;
+      z-index: 10;
+    }
+
+    .slide-inner {
+      max-width: 1100px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 1.5rem 2rem;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    /* Typography & Headers */
+    .sect-meta {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      color: var(--kiiwii-terracotta);
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      margin-bottom: 0.5rem;
+      display: inline-block;
+    }
+    .project-header {
+      margin-bottom: 1rem;
+    }
+    .slide-title {
+      font-family: var(--font-outfit);
+      font-size: 2.2rem;
+      font-weight: 800;
+      line-height: 1.2;
+      letter-spacing: -0.5px;
+      color: var(--home-fg-1);
+      margin-bottom: 0.6rem;
+    }
+    .slide-subtitle {
+      font-size: 0.95rem;
+      color: var(--home-fg-2);
+      line-height: 1.55;
+      max-width: 820px;
+      margin-bottom: 1.2rem;
+    }
+
+    /* Cards & Layout Grids */
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.2rem;
+    }
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.1rem;
+    }
+    .grid-4 {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0.9rem;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 1.25rem;
+      position: relative;
+      transition: border-color 0.2s ease, transform 0.2s ease;
+    }
+    .card:hover {
+      border-color: var(--window-border);
+    }
+    .card.highlight {
+      border-color: var(--kiiwii-terracotta);
+      background: linear-gradient(180deg, rgba(224, 122, 95, 0.05) 0%, var(--card-bg) 100%);
+    }
+
+    /* Pill Badges */
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-weight: 600;
+      margin-bottom: 0.6rem;
+    }
+    .pill-terracotta { background: var(--kiiwii-terracotta-dim); color: var(--kiiwii-terracotta); border: 1px solid rgba(224, 122, 95, 0.3); }
+    .pill-cyan { background: var(--kiiwii-cyan-dim); color: var(--kiiwii-cyan); border: 1px solid rgba(6, 182, 212, 0.3); }
+    .pill-green { background: var(--kiiwii-green-dim); color: var(--kiiwii-green); border: 1px solid rgba(16, 185, 129, 0.3); }
+    .pill-amber { background: var(--kiiwii-amber-dim); color: var(--kiiwii-amber); border: 1px solid rgba(245, 158, 11, 0.3); }
+    .pill-red { background: rgba(239, 68, 68, 0.12); color: var(--kiiwii-red); border: 1px solid rgba(239, 68, 68, 0.3); }
+
+    /* Comparison Box (Before vs After) */
+    .compare-box {
+      border-radius: 12px;
+      padding: 1.2rem;
+      height: 100%;
+    }
+    .compare-box.before {
+      background: rgba(239, 68, 68, 0.04);
+      border: 1px solid rgba(239, 68, 68, 0.25);
+    }
+    .compare-box.after {
+      background: rgba(16, 185, 129, 0.04);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+
+    /* Step Card */
+    .step-num {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: var(--kiiwii-terracotta);
+      color: #000;
+      font-family: var(--font-outfit);
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.85rem;
+      margin-bottom: 0.8rem;
+    }
+
+    /* Interactive Demo Console */
+    .demo-console {
+      background: #0d0f12;
+      border: 1px solid #242933;
+      border-radius: 12px;
+      padding: 1.2rem;
+      font-family: var(--font-space);
+    }
+    .console-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 0.75rem;
+      margin-bottom: 1rem;
+      border-bottom: 1px solid #242933;
+    }
+    .btn-action {
+      background: #1e232d;
+      border: 1px solid #323946;
+      color: var(--home-fg-1);
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-family: var(--font-space);
+      font-size: 0.78rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .btn-action:hover {
+      background: #2a313e;
+      border-color: var(--kiiwii-terracotta);
+      transform: translateY(-1px);
+    }
+    .btn-sound {
+      background: #1e232d;
+      border: 1px solid #323946;
+      color: #cbd5e1;
+      padding: 6px 10px;
+      border-radius: 6px;
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .btn-sound:hover {
+      background: var(--kiiwii-terracotta);
+      color: #000;
+      border-color: var(--kiiwii-terracotta);
+    }
+
+    .sku-chip-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 0.8rem 0;
+    }
+    .sku-chip {
+      background: #181c24;
+      border: 1px solid #2e3544;
+      color: #cbd5e1;
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .sku-chip:hover {
+      background: #272f3e;
+      border-color: var(--kiiwii-cyan);
+      color: #fff;
+    }
+
+    /* Live Mini Tally Table */
+    .tally-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-family: var(--font-mono);
+      font-size: 0.74rem;
+      margin-top: 0.8rem;
+    }
+    .tally-table th {
+      text-align: left;
+      padding: 6px 8px;
+      color: var(--home-fg-3);
+      border-bottom: 1px solid #242933;
+    }
+    .tally-table td {
+      padding: 6px 8px;
+      border-bottom: 1px solid #1a1e27;
+      color: #e2e8f0;
+      vertical-align: middle;
+    }
+
+    .btn-qty {
+      background: #1e232d;
+      border: 1px solid #363e4f;
+      color: #fff;
+      width: 20px;
+      height: 20px;
+      border-radius: 4px;
+      font-weight: bold;
+      font-size: 0.8rem;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 1;
+      transition: all 0.15s;
+    }
+    .btn-qty:hover {
+      background: var(--kiiwii-terracotta);
+      color: #000;
+      border-color: var(--kiiwii-terracotta);
+    }
+
+    /* Floating Navigation Controls (Bottom Right) */
+    .floating-controls {
+      position: fixed;
+      bottom: 18px;
+      right: 22px;
+      background: rgba(24, 24, 23, 0.95);
+      border: 1px solid var(--card-border);
+      backdrop-filter: blur(10px);
+      border-radius: 40px;
+      padding: 6px 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      z-index: 920;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+    }
+    [data-theme="light"] .floating-controls { background: rgba(255, 255, 255, 0.95); box-shadow: 0 8px 24px rgba(0,0,0,0.1); }
+
+    .ctrl-btn {
+      background: transparent;
+      border: none;
+      color: var(--home-fg-2);
+      font-size: 0.95rem;
+      cursor: pointer;
+      padding: 5px 8px;
+      border-radius: 6px;
+      transition: all 0.15s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .ctrl-btn:hover { color: var(--home-fg-1); background: var(--surface-hover); }
+    .slide-counter {
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--kiiwii-terracotta);
+      min-width: 54px;
+      text-align: center;
+    }
+
+    /* Nav Drawer (Sidebar) */
+    .nav-drawer {
+      position: fixed;
+      top: 0; right: -340px; width: 320px; height: 100vh;
+      background: var(--card-bg);
+      border-left: 1px solid var(--card-border);
+      padding: 1.5rem;
+      z-index: 950;
+      transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      display: flex;
+      flex-direction: column;
+      box-shadow: -10px 0 30px rgba(0,0,0,0.5);
+    }
+    .nav-drawer.open { right: 0; }
+    .nav-drawer-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+      padding-bottom: 0.8rem;
+      border-bottom: 1px solid var(--card-border);
+    }
+    .nav-drawer-title { font-family: var(--font-outfit); font-weight: 700; font-size: 1.05rem; }
+    .nav-drawer-list { list-style: none; display: flex; flex-direction: column; gap: 8px; flex: 1; overflow-y: auto; }
+    .nav-link {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 12px;
+      border-radius: 8px;
+      text-decoration: none;
+      color: var(--home-fg-2);
+      font-size: 0.82rem;
+      transition: all 0.15s ease;
+    }
+    .nav-link:hover, .nav-link.active {
+      background: var(--surface-hover);
+      color: var(--home-fg-1);
+    }
+    .nav-link.active .nav-link-num {
+      background: var(--kiiwii-terracotta);
+      color: #000;
+    }
+    .nav-link-num {
+      font-family: var(--font-mono);
+      font-size: 0.68rem;
+      font-weight: 700;
+      background: var(--card-border);
+      padding: 2px 6px;
+      border-radius: 4px;
+      color: var(--home-fg-2);
+    }
+    .nav-overlay {
+      position: fixed;
+      top: 0; left: 0; width: 100vw; height: 100vh;
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(4px);
+      z-index: 940;
+      display: none;
+    }
+    .nav-overlay.open { display: block; }
+
+    /* Footer Stamp */
+    .slide-footer-stamp {
+      margin-top: 1.5rem;
+      padding-top: 0.8rem;
+      border-top: 1px solid var(--card-border);
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      color: var(--home-fg-3);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    /* Print View */
+    @media print {
+      .floating-status-bar, .top-progress-bar-wrap, .floating-controls, .crt-scanlines, .nav-drawer, .nav-overlay {
+        display: none !important;
+      }
+      .slide-panel {
+        position: relative !important;
+        opacity: 1 !important;
+        visibility: visible !important;
+        page-break-after: always !important;
+        height: auto !important;
+        padding: 2rem !important;
+      }
+      html, body { overflow: visible !important; height: auto !important; }
+    }
+
+    @media (max-width: 768px) {
+      .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
+      .slide-title { font-size: 1.6rem; }
+      .slide-inner { padding: 1rem; }
+      .brand-sub { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- CRT Scanlines Overlay -->
+  <div class="crt-scanlines"></div>
+
+  <!-- Top Status Bar -->
+  <header class="floating-status-bar">
+    <div class="brand-section">
+      <span class="brand-badge">KIIWII QUICK-WIN</span>
+      <span class="brand-title">KiiWii.Bee</span>
+      <span class="brand-divider">/</span>
+      <span class="brand-sub">Mobile Barcode Stock Opname (Jubelio Excel Compatible)</span>
+    </div>
+
+    <div class="status-section">
+      <div class="live-indicator">
+        <span class="live-dot"></span>
+        <span>AUDIO SYNTH &amp; CODE 128 READY</span>
+      </div>
+      <span class="stamp-confidential">CONFIDENTIAL // PT FLEEK GROUP INDONESIA</span>
+    </div>
+  </header>
+
+  <!-- Top Progress Bar -->
+  <div class="top-progress-bar-wrap">
+    <div class="top-progress-bar-fill" id="topProgressBar"></div>
+  </div>
+
+  <!-- Floating Navigation Controls -->
+  <div class="floating-controls">
+    <button class="ctrl-btn" id="prevSlideBtn" onclick="prevSlide()" title="Slide Sebelumnya (Arrow Left)">◀</button>
+    <span class="slide-counter" id="slideCounter">01 / 07</span>
+    <button class="ctrl-btn" id="nextSlideBtn" onclick="nextSlide()" title="Slide Berikutnya (Arrow Right)">▶</button>
+    <div style="width:1px; height:16px; background:var(--card-border); margin:0 2px;"></div>
+    <button class="ctrl-btn" id="themeToggleBtn" title="Ganti Tema (Dark/Light)">🌓</button>
+    <button class="ctrl-btn" id="printDeckBtn" title="Cetak / Unduh PDF">🖨️</button>
+    <button class="ctrl-btn" id="navToggleBtn" title="Daftar Isi Slide">☰</button>
+  </div>
+
+  <!-- Nav Drawer (Sidebar) -->
+  <aside class="nav-drawer" id="navDrawer">
+    <div class="nav-drawer-header">
+      <span class="nav-drawer-title">Daftar Isi Presentasi</span>
+      <button class="ctrl-btn" id="closeNavBtn">✕</button>
+    </div>
+    <ul class="nav-drawer-list">
+      <li><a href="#slide-1" class="nav-link active" onclick="goToSlide(0)"><span class="nav-link-num">01</span> Executive Cover &amp; Core Promise</a></li>
+      <li><a href="#slide-2" class="nav-link" onclick="goToSlide(1)"><span class="nav-link-num">02</span> Realitas: Lembar Kertas vs Digital</a></li>
+      <li><a href="#slide-3" class="nav-link" onclick="goToSlide(2)"><span class="nav-link-num">03</span> Alur Kerja 3 Langkah Sederhana</a></li>
+      <li><a href="#slide-4" class="nav-link" onclick="goToSlide(3)"><span class="nav-link-num">04</span> 🔥 LIVE DEMO: Scanner &amp; Audio Beep</a></li>
+      <li><a href="#slide-5" class="nav-link" onclick="goToSlide(4)"><span class="nav-link-num">05</span> Arsitektur Ringan (PWA / Telegram)</a></li>
+      <li><a href="#slide-6" class="nav-link" onclick="goToSlide(5)"><span class="nav-link-num">06</span> Paket Investasi Beli Putus (Rp 10 Jt)</a></li>
+      <li><a href="#slide-7" class="nav-link" onclick="goToSlide(6)"><span class="nav-link-num">07</span> Timeline 1.5–2 Bulan &amp; Kick-off</a></li>
+    </ul>
+    <div style="margin-top:auto; padding-top:1rem; border-top:1px solid var(--card-border); font-size:0.65rem; color:var(--home-fg-3); font-family:var(--font-mono); text-align:center;">
+      Confidential — PT Fleek Group Indonesia — Fleek Project
+    </div>
+  </aside>
+  <div class="nav-overlay" id="navOverlay"></div>
+
+  <!-- ============================================================
+       SLIDES CONTAINER (7 SLIDES EXECUTIVE DECK)
+       ============================================================ -->
+  <main class="slides-container">
+
+    <!-- ============================================================
+         SLIDE 01: EXECUTIVE COVER & CORE PROMISE
+         ============================================================ -->
+    <section id="slide-1" class="slide-panel active">
+      <div class="slide-inner">
+        <span class="sect-meta">// PROPOSAL STRATEGIS SOLUSI QUICK-WIN // ATTN: PAK DOMINICUS HADI</span>
+        <div class="project-header">
+          <div style="display:flex; gap:8px; align-items:center; margin-bottom:8px;">
+            <span class="pill pill-terracotta">KiiWii.Bee Fashion Retail</span>
+            <span class="pill pill-cyan">Stock Opname MVP</span>
+            <span class="pill pill-green">1.5–2 Bulan Rollout</span>
+          </div>
+          <h1 class="slide-title animate-text">
+            Stock Opname Cepat &amp; Akurat Tanpa Kertas:<br>
+            <span style="color:var(--kiiwii-terracotta);">Scan Barcode Kamera HP</span> &amp; Hitung Selisih Otomatis.
+          </h1>
+          <p class="slide-subtitle animate-text">
+            Solusi praktis dan tepat guna untuk <b>Pak Dominicus Hadi &amp; Tim KiiWii.Bee</b>. Menghilangkan proses cek manual lembar Jubelio yang melelahkan. Cukup impor Excel, scan barcode lewat kamera HP Android dengan umpan balik suara beep, dan langsung dapatkan laporan selisih fisik vs sistem.
+          </p>
+        </div>
+
+        <!-- 3 Core Highlights -->
+        <div class="grid-3">
+          <div class="card highlight">
+            <div style="font-size:1.6rem; margin-bottom:6px;">📱</div>
+            <h3 style="font-family:var(--font-outfit); font-size:1.05rem; margin-bottom:6px;">100% Kamera HP Biasa</h3>
+            <p style="font-size:0.82rem; color:var(--home-fg-2); line-height:1.45;">
+              Tidak perlu beli alat scanner laser mahal (honeywell/zebra). Cukup pakai HP Android tim toko yang sudah ada dengan continuous camera scan.
+            </p>
+          </div>
+
+          <div class="card">
+            <div style="font-size:1.6rem; margin-bottom:6px;">🔊</div>
+            <h3 style="font-family:var(--font-outfit); font-size:1.05rem; margin-bottom:6px;">Audio Beep &amp; Varian Terang</h3>
+            <p style="font-size:0.82rem; color:var(--home-fg-2); line-height:1.45;">
+              Tiap scan bersuara: <i>Beep 1×</i> sukses normal, <i>Beep 2×</i> target pas/ganda, dan <i>Buzz</i> bila SKU asing. Layar menampilkan SKU + varian berjalan.
+            </p>
+          </div>
+
+          <div class="card">
+            <div style="font-size:1.6rem; margin-bottom:6px;">📊</div>
+            <h3 style="font-family:var(--font-outfit); font-size:1.05rem; margin-bottom:6px;">Rekap Selisih Siap Jubelio</h3>
+            <p style="font-size:0.82rem; color:var(--home-fg-2); line-height:1.45;">
+              Langsung rekap perbandingan: Fisik vs Sistem Excel (Plus `+` / Minus `-`). Siap diekspor kembali ke format Excel tanpa ketik ulang satu pun.
+            </p>
+          </div>
+        </div>
+
+        <div class="slide-footer-stamp">
+          <span>Target Delivery &amp; Pendampingan: 1.5–2 Bulan Penuh // Beli Putus Tanpa Biaya Bulanan</span>
+          <span>Confidential — PT Fleek Group Indonesia — Fleek Project</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         SLIDE 02: REALITAS SEBELUM VS SESUDAH
+         ============================================================ -->
+    <section id="slide-2" class="slide-panel">
+      <div class="slide-inner">
+        <span class="sect-meta">// PROBLEM RECOGNITION // THE COST OF PAPER-BASED OPNAME</span>
+        <h2 class="slide-title animate-text">Dari 249 Baris Kertas Manual ke Scanner Digital</h2>
+        <p class="slide-subtitle animate-text">
+          Mengapa proses stock opname saat ini makan waktu berjam-jam dan rentan salah hitung.
+        </p>
+
+        <div class="grid-2">
+          <!-- Cara Lama -->
+          <div class="compare-box before">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+              <span class="pill pill-red">❌ Proses Lama (Manual &amp; Melelahkan)</span>
+              <span style="font-family:var(--font-mono); font-size:0.75rem; color:var(--kiiwii-red);">± 3–4 Jam / Sesi</span>
+            </div>
+            <ul style="list-style:none; display:flex; flex-direction:column; gap:10px; font-size:0.84rem; color:var(--home-fg-2);">
+              <li style="display:flex; gap:8px;">
+                <span style="color:var(--kiiwii-red); font-weight:bold;">1.</span>
+                <span><b>Print File Excel Jubelio ke Kertas:</b> Menghabiskan lembaran kertas berisi ratusan baris kode SKU kecil.</span>
+              </li>
+              <li style="display:flex; gap:8px;">
+                <span style="color:var(--kiiwii-red); font-weight:bold;">2.</span>
+                <span><b>Jalan Keliling Bawa Pulpen &amp; Papan Ujian:</b> Staff harus cari baris SKU satu per satu di kertas sambil hitung fisik baju di gantungan.</span>
+              </li>
+              <li style="display:flex; gap:8px;">
+                <span style="color:var(--kiiwii-red); font-weight:bold;">3.</span>
+                <span><b>Human Error Mata Lelah:</b> SKU mirip (seperti <code>K591BR</code> vs <code>K591BL</code>) gampang salah centang atau terlewat.</span>
+              </li>
+              <li style="display:flex; gap:8px;">
+                <span style="color:var(--kiiwii-red); font-weight:bold;">4.</span>
+                <span><b>Input Ulang ke Laptop:</b> Setelah selesai di kertas, harus diketik ulang satu per satu ke Excel untuk hitung selisihnya.</span>
+              </li>
+            </ul>
+          </div>
+
+          <!-- Cara Baru -->
+          <div class="compare-box after">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+              <span class="pill pill-green">✅ Solusi Fleek KiiWii Mobile Scanner</span>
+              <span style="font-family:var(--font-mono); font-size:0.75rem; color:var(--kiiwii-green);">± 15–20 Menit Selesai</span>
+            </div>
+            <ul style="list-style:none; display:flex; flex-direction:column; gap:10px; font-size:0.84rem; color:var(--home-fg-1);">
+              <li style="display:flex; gap:8px;">
+                <span style="color:var(--kiiwii-green); font-weight:bold;">1.</span>
+                <span><b>Upload File Excel Jubelio Sekali Klik:</b> Drag-and-drop file stok (misal 249 SKU, 470 pcs). Database siap instan.</span>
+              </li>
+              <li style="display:flex; gap:8px;">
+                <span style="color:var(--kiiwii-green); font-weight:bold;">2.</span>
+                <span><b>Scan Mengalir Pakai Kamera HP:</b> Arahkan kamera ke hangtag baju. Bunyi <i>Beep!</i> mengonfirmasi hitungan berjalan otomatis (+1).</span>
+              </li>
+              <li style="display:flex; gap:8px;">
+                <span style="color:var(--kiiwii-green); font-weight:bold;">3.</span>
+                <span><b>Normalisasi Cerdas Anti-Gagal:</b> Tidak peka huruf besar-kecil (<code>k407ar</code> = <code>K407AR</code>) &amp; abaikan nomor cetak label "330".</span>
+              </li>
+              <li style="display:flex; gap:8px;">
+                <span style="color:var(--kiiwii-green); font-weight:bold;">4.</span>
+                <span><b>Hasil Selisih Langsung Jadi:</b> Merah bila stok hilang/kurang, Kuning bila lebih, Hijau bila klop. Sekali klik ekspor ke Excel.</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="slide-footer-stamp">
+          <span>Efisiensi: Menghemat 85% waktu opname &amp; 0% risiko salah ketik ulang</span>
+          <span>Confidential — PT Fleek Group Indonesia — Fleek Project</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         SLIDE 03: ALUR KERJA 3 LANGKAH
+         ============================================================ -->
+    <section id="slide-3" class="slide-panel">
+      <div class="slide-inner">
+        <span class="sect-meta">// WORKFLOW &amp; USER EXPERIENCE // ZERO LEARNING CURVE</span>
+        <h2 class="slide-title animate-text">Alur Kerja 3 Langkah Sederhana</h2>
+        <p class="slide-subtitle animate-text">
+          Dirancang agar staf toko atau gudang KiiWii dapat langsung memakai sistem tanpa perlu pelatihan rumit.
+        </p>
+
+        <div class="grid-3" style="margin-bottom:1.2rem;">
+          <!-- Step 1 -->
+          <div class="card">
+            <div class="step-num">1</div>
+            <span class="pill pill-cyan">Sebelum Opname</span>
+            <h3 style="font-family:var(--font-outfit); font-size:1.1rem; margin:6px 0;">Impor Excel Jubelio</h3>
+            <p style="font-size:0.83rem; color:var(--home-fg-2); line-height:1.5;">
+              Download file laporan persediaan gudang dari Jubelio (<code>persediaan_gudang.xlsx</code>). Upload ke aplikasi. Sistem otomatis membaca kolom SKU dan Total stok yang harus dicocokkan.
+            </p>
+            <div style="margin-top:10px; padding:8px; background:rgba(6, 182, 212, 0.08); border-radius:6px; font-family:var(--font-mono); font-size:0.7rem; color:var(--kiiwii-cyan);">
+              ✓ Mendukung 249+ SKU &amp; ratusan pcs stok
+            </div>
+          </div>
+
+          <!-- Step 2 -->
+          <div class="card highlight">
+            <div class="step-num">2</div>
+            <span class="pill pill-terracotta">Saat Opname Berjalan</span>
+            <h3 style="font-family:var(--font-outfit); font-size:1.1rem; margin:6px 0;">Scan Barcode Kamera HP</h3>
+            <p style="font-size:0.83rem; color:var(--home-fg-2); line-height:1.5;">
+              Buka aplikasi di HP Android, arahkan kamera ke barcode Code 128 di hangtag baju. Tiap barang terdeteksi langsung berbunyi <b>Beep!</b>, angka bertambah <b>+1 pcs</b>, dan varian tampil jelas di layar.
+            </p>
+            <div style="margin-top:10px; padding:8px; background:rgba(224, 122, 95, 0.08); border-radius:6px; font-family:var(--font-mono); font-size:0.7rem; color:var(--kiiwii-terracotta);">
+              ✓ Suara Beep + Getar Haptic (tanpa lihat layar terus)
+            </div>
+          </div>
+
+          <!-- Step 3 -->
+          <div class="card">
+            <div class="step-num">3</div>
+            <span class="pill pill-green">Selesai Opname</span>
+            <h3 style="font-family:var(--font-outfit); font-size:1.1rem; margin:6px 0;">Cek Selisih &amp; Ekspor</h3>
+            <p style="font-size:0.83rem; color:var(--home-fg-2); line-height:1.5;">
+              Sistem langsung merangkum: Berapa pcs yang klop, berapa yang minus (hilang/belum ketemu), dan berapa yang plus. Tekan tombol <b>Ekspor Excel</b> untuk penyesuaian stok di Jubelio.
+            </p>
+            <div style="margin-top:10px; padding:8px; background:rgba(16, 185, 129, 0.08); border-radius:6px; font-family:var(--font-mono); font-size:0.7rem; color:var(--kiiwii-green);">
+              ✓ Laporan rapi dalam format spreadsheet (.xlsx / .csv)
+            </div>
+          </div>
+        </div>
+
+        <!-- 3 Modes Feature Banner -->
+        <div class="card" style="background:#13161c; border-color:#2a313e; margin-bottom:0.5rem; padding:12px 16px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+            <span style="font-family:var(--font-mono); font-size:0.75rem; color:var(--kiiwii-terracotta); font-weight:700;">
+              ✨ DILENGKAPI 3 MODE OPERASIONAL FLEKSIBEL (DATABASE GOOGLE SPREADSHEET):
+            </span>
+            <span class="pill pill-green">Live Sync Cloud</span>
+          </div>
+          <div class="grid-3" style="font-size:0.78rem; gap:10px;">
+            <div>
+              <b style="color:#fff;">1. Mode Opname (Default):</b><br>
+              <span style="color:var(--home-fg-2);">Scan barcode mengalir, hitung selisih real-time vs data target Excel Jubelio, audio beep, dan tally berjalan.</span>
+            </div>
+            <div>
+              <b style="color:#fff;">2. Mode Tambah Barang / Barcode:</b><br>
+              <span style="color:var(--home-fg-2);">Untuk baju baru / barcode baru: scan hangtag ➔ ketik nama/varian ➔ langsung terdaftar di Google Spreadsheet.</span>
+            </div>
+            <div>
+              <b style="color:#fff;">3. Mode Konfirmasi &amp; Lock:</b><br>
+              <span style="color:var(--home-fg-2);">Review daftar selisih merah/kuning oleh Pak Hadi/SPV, konfirmasi hasil akhir, dan kunci sesi agar siap diekspor.</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="slide-footer-stamp">
+          <span>Prinsip Fleek: Zero Friction // Karyawan tidak perlu instalasi rumit</span>
+          <span>Confidential — PT Fleek Group Indonesia — Fleek Project</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         SLIDE 04: 🔥 LIVE INTERACTIVE DEMO (SCANNER & AUDIO)
+         ============================================================ -->
+    <section id="slide-4" class="slide-panel">
+      <div class="slide-inner">
+        <span class="sect-meta">// 🔥 INTERACTIVE SYSTEM DEMO // UJI COBA SUARA &amp; SIMULASI DATA RIIL</span>
+        <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:0.8rem;">
+          <div>
+            <h2 class="slide-title animate-text" style="font-size:1.8rem; margin-bottom:4px;">Simulator Scanner &amp; Web Audio Synth</h2>
+            <p style="font-size:0.85rem; color:var(--home-fg-2);">
+              Coba langsung umpan balik suara beep dan simulasi scan SKU asli dari sampel Excel KiiWii Pak Hadi:
+            </p>
+          </div>
+          <button class="btn-action" onclick="toggleCameraDemo()" id="camToggleBtn">
+            📷 <span>Aktifkan Scanner Kamera Live</span>
+          </button>
+        </div>
+
+        <!-- The Interactive Console -->
+        <div class="demo-console">
+          <!-- Audio Synth Tester -->
+          <div class="console-header">
+            <div>
+              <span style="font-family:var(--font-mono); font-size:0.75rem; color:var(--kiiwii-terracotta); font-weight:700;">TEST 3 NADA AUDIO BEEP:</span>
+            </div>
+            <div style="display:flex; gap:6px;">
+              <button class="btn-sound" onclick="playBeepSuccess()">🔊 Beep 1× (Normal)</button>
+              <button class="btn-sound" onclick="playBeepDouble()">🔊🔊 Beep 2× (Target/Ganda)</button>
+              <button class="btn-sound" onclick="playBuzzError()">⚠️ Low Buzz (SKU Salah)</button>
+            </div>
+          </div>
+
+          <!-- Camera Stream Container (Hidden by default) -->
+          <div id="cameraContainer" style="display:none; margin-bottom:12px; background:#000; border-radius:8px; overflow:hidden; position:relative;">
+            <div id="reader" style="width:100%; max-height:220px;"></div>
+            <div style="position:absolute; bottom:6px; left:10px; font-size:0.7rem; color:#fff; background:rgba(0,0,0,0.6); padding:2px 8px; border-radius:4px;">
+              Arahkan ke Barcode Code 128 hangtag KiiWii
+            </div>
+          </div>
+
+          <!-- SKU Chip Simulators -->
+          <div>
+            <div style="font-size:0.75rem; color:var(--home-fg-3); font-family:var(--font-mono); margin-bottom:4px;">
+              SIMULASI TAP SCAN SKU (Data Excel KiiWii Riil):
+            </div>
+            <div class="sku-chip-grid">
+              <button class="sku-chip" onclick="simulateScan('K591BR', 'Dress Polos Brown', 3)">
+                👗 <b>K591BR</b> (Target: 3 pcs)
+              </button>
+              <button class="sku-chip" onclick="simulateScan('k407AR', 'Atasan Rajut (Case Test)', 2)">
+                🧶 <b>k407AR</b> (Huruf Kecil)
+              </button>
+              <button class="sku-chip" onclick="simulateScan('C122', 'Cardigan Tanpa Warna', 1)">
+                🧥 <b>C122</b> (No Color Code)
+              </button>
+              <button class="sku-chip" onclick="simulateScan('R214 only', 'Rok Flare Spesial', 1)">
+                👗 <b>R214 only</b> (Nama Khusus)
+              </button>
+              <button class="sku-chip" style="border-color:rgba(239, 68, 68, 0.4); color:var(--kiiwii-red);" onclick="simulateScan('UNKNOWN-999', 'Barang Asing / Error', 0)">
+                ❓ <b>UNKNOWN-999</b> (Barang Salah)
+              </button>
+              <button class="btn-action" style="padding:4px 10px; font-size:0.72rem; margin-left:auto;" onclick="resetDemoTally()">
+                🔄 Reset Tally
+              </button>
+            </div>
+          </div>
+
+          <!-- Live Scoreboard -->
+          <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:8px; margin-top:10px; padding:10px; background:#14171f; border-radius:8px;">
+            <div>
+              <div style="font-size:0.65rem; color:var(--home-fg-3); font-family:var(--font-mono);">STATUS SCAN TERAKHIR</div>
+              <div id="lastScannedText" style="font-size:0.85rem; font-weight:700; color:var(--kiiwii-terracotta); font-family:var(--font-mono);">-</div>
+            </div>
+            <div>
+              <div style="font-size:0.65rem; color:var(--home-fg-3); font-family:var(--font-mono);">TOTAL PCS TER-SCAN</div>
+              <div id="totalPcsScanned" style="font-size:1.1rem; font-weight:800; color:#fff; font-family:var(--font-mono);">0 pcs</div>
+            </div>
+            <div>
+              <div style="font-size:0.65rem; color:var(--home-fg-3); font-family:var(--font-mono);">TARGET EXCEL</div>
+              <div style="font-size:1.1rem; font-weight:800; color:var(--home-fg-2); font-family:var(--font-mono);">7 pcs</div>
+            </div>
+            <div>
+              <div style="font-size:0.65rem; color:var(--home-fg-3); font-family:var(--font-mono);">TOTAL SELISIH</div>
+              <div id="totalVariance" style="font-size:1.1rem; font-weight:800; color:var(--kiiwii-red); font-family:var(--font-mono);">-7 pcs</div>
+            </div>
+          </div>
+
+          <!-- Mini Tally Table -->
+          <table class="tally-table">
+            <thead>
+              <tr>
+                <th>SKU Code</th>
+                <th>Nama / Keterangan</th>
+                <th>Target Jubelio</th>
+                <th>Fisik Ter-scan</th>
+                <th>Selisih (+/-)</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="tallyTableBody">
+              <tr id="row-K591BR">
+                <td><code>K591BR</code></td>
+                <td>Dress Polos Brown</td>
+                <td>3 pcs</td>
+                <td>
+                  <div style="display:inline-flex; align-items:center; gap:5px;">
+                    <button class="btn-qty" onclick="adjustQty('K591BR', -1)" title="Kurangi 1 pcs">-</button>
+                    <span id="scan-K591BR" style="min-width:38px; text-align:center; font-weight:700;">0 pcs</span>
+                    <button class="btn-qty" onclick="adjustQty('K591BR', 1)" title="Tambah 1 pcs">+</button>
+                  </div>
+                </td>
+                <td id="diff-K591BR" style="color:var(--kiiwii-red);">-3</td>
+                <td><span class="pill pill-red" id="badge-K591BR">Belum Lengkap</span></td>
+              </tr>
+              <tr id="row-k407AR">
+                <td><code>k407AR</code></td>
+                <td>Atasan Rajut</td>
+                <td>2 pcs</td>
+                <td>
+                  <div style="display:inline-flex; align-items:center; gap:5px;">
+                    <button class="btn-qty" onclick="adjustQty('k407AR', -1)" title="Kurangi 1 pcs">-</button>
+                    <span id="scan-k407AR" style="min-width:38px; text-align:center; font-weight:700;">0 pcs</span>
+                    <button class="btn-qty" onclick="adjustQty('k407AR', 1)" title="Tambah 1 pcs">+</button>
+                  </div>
+                </td>
+                <td id="diff-k407AR" style="color:var(--kiiwii-red);">-2</td>
+                <td><span class="pill pill-red" id="badge-k407AR">Belum Lengkap</span></td>
+              </tr>
+              <tr id="row-C122">
+                <td><code>C122</code></td>
+                <td>Cardigan No Color</td>
+                <td>1 pcs</td>
+                <td>
+                  <div style="display:inline-flex; align-items:center; gap:5px;">
+                    <button class="btn-qty" onclick="adjustQty('C122', -1)" title="Kurangi 1 pcs">-</button>
+                    <span id="scan-C122" style="min-width:38px; text-align:center; font-weight:700;">0 pcs</span>
+                    <button class="btn-qty" onclick="adjustQty('C122', 1)" title="Tambah 1 pcs">+</button>
+                  </div>
+                </td>
+                <td id="diff-C122" style="color:var(--kiiwii-red);">-1</td>
+                <td><span class="pill pill-red" id="badge-C122">Belum Lengkap</span></td>
+              </tr>
+              <tr id="row-R214">
+                <td><code>R214 only</code></td>
+                <td>Rok Flare Spesial</td>
+                <td>1 pcs</td>
+                <td>
+                  <div style="display:inline-flex; align-items:center; gap:5px;">
+                    <button class="btn-qty" onclick="adjustQty('R214', -1)" title="Kurangi 1 pcs">-</button>
+                    <span id="scan-R214" style="min-width:38px; text-align:center; font-weight:700;">0 pcs</span>
+                    <button class="btn-qty" onclick="adjustQty('R214', 1)" title="Tambah 1 pcs">+</button>
+                  </div>
+                </td>
+                <td id="diff-R214" style="color:var(--kiiwii-red);">-1</td>
+                <td><span class="pill pill-red" id="badge-R214">Belum Lengkap</span></td>
+              </tr>
+            </tbody>
+          </table>
+
+          <!-- Barcode Logic Explanation Box -->
+          <div style="margin-top:10px; padding:10px 12px; background:#12151c; border:1px solid #28303f; border-radius:8px; font-size:0.75rem; color:var(--home-fg-2); line-height:1.45;">
+            <div style="font-family:var(--font-mono); font-weight:700; color:var(--kiiwii-cyan); margin-bottom:5px; display:flex; gap:6px; align-items:center;">
+              <span>💡 PENJELASAN TEKNIS CARA BACA BARCODE HANGTAG:</span>
+            </div>
+            <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:10px;">
+              <div>
+                <b style="color:#fff;">1. Angka "330" di Atas Garis:</b><br>
+                Diabaikan otomatis. Itu nomor batch urutan cetak mesin label. Yang dibaca sensor kamera optik <b>hanya garis hitam Code 128</b> yang isinya string <code>K591BR</code>.
+              </div>
+              <div>
+                <b style="color:#fff;">2. Nambah (+) &amp; Ngurangi (-):</b><br>
+                Tiap scan sukses otomatis <b>+1 pcs</b>. Jika salah scan/ingin koreksi, cukup tap tombol <b>[-]</b> di tabel atau scan ulang dengan jeda anti-double.
+              </div>
+              <div>
+                <b style="color:#fff;">3. Kalo Format Beda-Beda:</b><br>
+                Normalisasi otomatis: huruf kecil (<code>k407AR</code> = <code>K407AR</code>), spasi, maupun kode tanpa warna (<code>C122</code>) dicocokkan otomatis ke database Excel Jubelio.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="slide-footer-stamp">
+          <span>Web Audio API Synth: Bebas dependensi file MP3 eksternal // Berjalan di Android Chrome &amp; iOS</span>
+          <span>Confidential — PT Fleek Group Indonesia — Fleek Project</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         SLIDE 05: ARSITEKTUR RINGAN & PRIVASI DATA
+         ============================================================ -->
+    <section id="slide-5" class="slide-panel">
+      <div class="slide-inner">
+        <span class="sect-meta">// TECHNICAL SPECIFICATIONS // LIGHTWEIGHT &amp; INDEPENDENT</span>
+        <h2 class="slide-title animate-text">Arsitektur Ringan: PWA / Telegram Mini App</h2>
+        <p class="slide-subtitle animate-text">
+          Mengapa solusi ini 100% aman, cepat, dan tidak membebani tim KiiWii dengan instalasi rumit.
+        </p>
+
+        <div class="grid-2" style="margin-bottom:1rem;">
+          <div class="card">
+            <span class="pill pill-cyan">Zero Hassle Access</span>
+            <h3 style="font-family:var(--font-outfit); font-size:1.15rem; margin:6px 0;">Bisa via PWA Browser &amp; Telegram</h3>
+            <p style="font-size:0.83rem; color:var(--home-fg-2); line-height:1.5;">
+              Staf tidak perlu sideload APK asing yang bisa diblokir oleh keamanan Android. Aplikasi bisa diakses instan melalui <b>Telegram Mini App</b> atau <b>PWA (Progressive Web App)</b> langsung dari Google Chrome di HP.
+            </p>
+            <ul style="margin-top:10px; font-size:0.8rem; color:var(--home-fg-1); display:flex; flex-direction:column; gap:6px;">
+              <li>• Langsung dapat ikon di homescreen Android layaknya aplikasi native.</li>
+              <li>• Mendukung akses multi-staf secara bersamaan di lokasi rak berbeda.</li>
+              <li>• Akses kamera continuous berkecepatan tinggi (30 fps frame decoding).</li>
+            </ul>
+          </div>
+
+          <div class="card">
+            <span class="pill pill-green">Database Google Spreadsheet</span>
+            <h3 style="font-family:var(--font-outfit); font-size:1.15rem; margin:6px 0;">Live Sync ke Google Sheets Privat</h3>
+            <p style="font-size:0.83rem; color:var(--home-fg-2); line-height:1.5;">
+              Seluruh data stok tersimpan langsung di <b>Google Spreadsheet privat KiiWii (Google Drive Pak Hadi)</b>. Saat staf scan di toko, angka di Spreadsheet ter-update otomatis detik per detik.
+            </p>
+            <ul style="margin-top:10px; font-size:0.8rem; color:var(--home-fg-1); display:flex; flex-direction:column; gap:6px;">
+              <li>• 100% Hak Milik Pak Hadi: Bisa dibuka dari laptop, HP, atau dibagikan ke tim admin toko.</li>
+              <li>• Multi-User Real-time: Beberapa staf bisa scan rak berbeda bersamaan tanpa data bentrok.</li>
+              <li>• Bebas Biaya Server: Zero hosting maintenance bulanan, tanpa database SQL rumit.</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Barcode Handling Logic -->
+        <div class="card" style="background:#13161c; border-color:#2a313e;">
+          <h4 style="font-family:var(--font-mono); font-size:0.82rem; color:var(--kiiwii-terracotta); margin-bottom:6px;">
+            LOGIKA PENCOCOKAN BARCODE KIIWII (SAMPLE ANALYSIS RESULT):
+          </h4>
+          <div class="grid-3" style="font-size:0.78rem; color:var(--home-fg-2); gap:10px;">
+            <div>
+              <b style="color:#fff;">1. Standard Code 128:</b><br>
+              Decode persis kode SKU (contoh: <code>K591BR</code>). Angka batch cetak "330" di atas label diabaikan otomatis.
+            </div>
+            <div>
+              <b style="color:#fff;">2. Normalisasi Huruf &amp; Spasi:</b><br>
+              Otomatis <i>trim whitespace</i> dan <i>case-insensitive</i> (<code>k407AR</code> dan <code>K407ar</code> dianggap sama persis).
+            </div>
+            <div>
+              <b style="color:#fff;">3. SKU Spesial Tanpa Warna:</b><br>
+              13 SKU model unik seperti <code>C122</code> &amp; <code>R214 only</code> langsung cocok 100% tanpa error format.
+            </div>
+          </div>
+        </div>
+
+        <div class="slide-footer-stamp">
+          <span>Keamanan Data: Cloud privat terenkripsi SSL // Database KiiWii 100% milik Pak Hadi</span>
+          <span>Confidential — PT Fleek Group Indonesia — Fleek Project</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         SLIDE 06: INVESTASI & GARANSI
+         ============================================================ -->
+    <section id="slide-6" class="slide-panel">
+      <div class="slide-inner">
+        <span class="sect-meta">// COMMERCIAL PROPOSAL // TRANSPARENT ONE-TIME INVESTMENT</span>
+        <h2 class="slide-title animate-text">Paket Investasi Beli Putus (One-Time)</h2>
+        <p class="slide-subtitle animate-text">
+          Tanpa biaya langganan bulanan. Beli putus dengan serah terima penuh dan garansi pendampingan.
+        </p>
+
+        <div class="grid-2" style="margin-bottom:1.2rem;">
+          <!-- Quotation Card -->
+          <div class="card highlight" style="display:flex; flex-direction:column; justify-content:space-between;">
+            <div>
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                <span class="pill pill-terracotta">Paket Lengkap Quick-Win MVP</span>
+                <span style="font-family:var(--font-mono); font-size:0.75rem; color:var(--kiiwii-green);">Garansi 30 Hari</span>
+              </div>
+              <div style="margin:1rem 0;">
+                <div style="font-size:0.8rem; color:var(--home-fg-3); font-family:var(--font-mono);">NILAI INVESTASI LENGKAP:</div>
+                <div style="font-family:var(--font-outfit); font-size:2.4rem; font-weight:800; color:#fff;">
+                  Rp 10.000.000 <span style="font-size:0.9rem; font-weight:500; color:var(--home-fg-3);">/ Beli Putus</span>
+                </div>
+                <div style="font-size:0.78rem; color:var(--kiiwii-terracotta); font-family:var(--font-mono); margin-top:2px;">
+                  Nett // Bebas biaya bulanan selamanya (No recurring SaaS fee)
+                </div>
+              </div>
+
+              <div style="border-top:1px solid var(--card-border); padding-top:10px;">
+                <div style="font-size:0.78rem; font-weight:700; color:var(--home-fg-1); margin-bottom:6px;">
+                  SKEMA TERMIN PEMBAYARAN FLEEK:
+                </div>
+                <div style="display:flex; flex-direction:column; gap:6px; font-size:0.82rem;">
+                  <div style="display:flex; justify-content:space-between; padding:6px 10px; background:var(--surface-hover); border-radius:6px;">
+                    <span><b>Termin 1 (DP 50%):</b> Saat Kick-off &amp; Mulai Setup</span>
+                    <b style="color:var(--kiiwii-terracotta); font-family:var(--font-mono);">Rp 5.000.000</b>
+                  </div>
+                  <div style="display:flex; justify-content:space-between; padding:6px 10px; background:var(--surface-hover); border-radius:6px;">
+                    <span><b>Termin 2 (Pelunasan 50%):</b> Setelah Uji Coba Pertama Lolos</span>
+                    <b style="color:var(--kiiwii-green); font-family:var(--font-mono);">Rp 5.000.000</b>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div style="margin-top:14px; font-size:0.75rem; color:var(--home-fg-3); font-family:var(--font-mono);">
+              * Rekening resmi atas nama Founder Fleek Group (Dimitri Ahmad / PT Fleek Group Indonesia).
+            </div>
+          </div>
+
+          <!-- Deliverables Checklist -->
+          <div class="card">
+            <h3 style="font-family:var(--font-outfit); font-size:1.1rem; margin-bottom:12px; color:var(--home-fg-1);">
+              Yang Didapatkan KiiWii.Bee:
+            </h3>
+            <ul style="list-style:none; display:flex; flex-direction:column; gap:10px; font-size:0.82rem; color:var(--home-fg-2);">
+              <li style="display:flex; gap:8px;">
+                <span style="color:var(--kiiwii-green);">✓</span>
+                <span><b>Modul Impor File Excel Jubelio:</b> Langsung membaca template persediaan gudang tanpa perlu utak-atik kolom.</span>
+              </li>
+              <li style="display:flex; gap:8px;">
+                <span style="color:var(--kiiwii-green);">✓</span>
+                <span><b>Mobile Continuous Camera Scanner:</b> Scanning cepat barcode Code 128 lewat kamera HP Android (PWA / Telegram).</span>
+              </li>
+              <li style="display:flex; gap:8px;">
+                <span style="color:var(--kiiwii-green);">✓</span>
+                <span><b>Web Audio Feedback Synth Engine:</b> Suara Beep 1x, Beep 2x ganda, dan Buzz error langsung dari speaker HP.</span>
+              </li>
+              <li style="display:flex; gap:8px;">
+                <span style="color:var(--kiiwii-green);">✓</span>
+                <span><b>Mesin Kalkulasi Selisih Real-Time:</b> Perhitungan otomatis fisik vs Excel (Plus / Minus) per SKU.</span>
+              </li>
+              <li style="display:flex; gap:8px;">
+                <span style="color:var(--kiiwii-green);">✓</span>
+                <span><b>Modul Ekspor Laporan Selisih Excel:</b> Menghasilkan spreadsheet rekap rapi yang siap diinput ke Jubelio.</span>
+              </li>
+              <li style="display:flex; gap:8px;">
+                <span style="color:var(--kiiwii-green);">✓</span>
+                <span><b>Garansi Bug Fix 30 Hari &amp; Panduan:</b> Tim teknis Fleek mendampingi proses hingga uji coba pertama berhasil 100%.</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="slide-footer-stamp">
+          <span>Prinsip Fleek: Value-first // Hasil nyata terlihat dalam minggu pertama</span>
+          <span>Confidential — PT Fleek Group Indonesia — Fleek Project</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         SLIDE 07: ROADMAP 7 HARI KERJA & NEXT STEPS
+         ============================================================ -->
+    <section id="slide-7" class="slide-panel">
+      <div class="slide-inner">
+        <span class="sect-meta">// IMPLEMENTATION ROADMAP // 1.5–2 MONTH FULL CYCLE PLAN</span>
+        <h2 class="slide-title animate-text">Roadmap 1.5–2 Bulan &amp; Jadwal Kick-off</h2>
+        <p class="slide-subtitle animate-text">
+          Pendampingan komprehensif melewati 2 siklus stock opname retail KiiWii.Bee (6–8 minggu) agar sistem terbukti 100% akurat dan stabil di lapangan.
+        </p>
+
+        <!-- Gantt Timeline Cards -->
+        <div class="grid-4" style="margin-bottom:1.2rem;">
+          <div class="card">
+            <span class="pill pill-cyan">Minggu 1–2</span>
+            <h4 style="font-family:var(--font-outfit); font-size:0.95rem; margin:6px 0;">Setup &amp; Web Admin Hub</h4>
+            <p style="font-size:0.78rem; color:var(--home-fg-2); line-height:1.45;">
+              Inisialisasi PWA Mobile Scanner, Web Hub upload file Excel Jubelio, dan struktur database lokal 249 SKU.
+            </p>
+          </div>
+
+          <div class="card">
+            <span class="pill pill-terracotta">Minggu 3–4</span>
+            <h4 style="font-family:var(--font-outfit); font-size:0.95rem; margin:6px 0;">Scanner &amp; Audio Synth</h4>
+            <p style="font-size:0.78rem; color:var(--home-fg-2); line-height:1.45;">
+              Integrasi continuous camera Code 128, Web Audio synth, tombol koreksi `[-]`/`[+]`, dan uji coba lab internal.
+            </p>
+          </div>
+
+          <div class="card">
+            <span class="pill pill-amber">Minggu 5–6</span>
+            <h4 style="font-family:var(--font-outfit); font-size:0.95rem; margin:6px 0;">Live Opname Siklus #1</h4>
+            <p style="font-size:0.78rem; color:var(--home-fg-2); line-height:1.45;">
+              Implementasi langsung di toko/gudang pada jadwal opname pertama bersama tim Pak Hadi, evaluasi selisih.
+            </p>
+          </div>
+
+          <div class="card highlight">
+            <span class="pill pill-green">Minggu 7–8</span>
+            <h4 style="font-family:var(--font-outfit); font-size:0.95rem; margin:6px 0;">Siklus #2 &amp; Handover</h4>
+            <p style="font-size:0.78rem; color:var(--home-fg-2); line-height:1.45;">
+              Pengujian pada siklus opname kedua untuk memastikan stabilitas tuntas, pelatihan staf, dan serah terima final.
+            </p>
+          </div>
+        </div>
+
+        <!-- Next Step Action Box -->
+        <div class="card highlight" style="display:flex; justify-content:space-between; align-items:center; padding:1.2rem;">
+          <div>
+            <h3 style="font-family:var(--font-outfit); font-size:1.15rem; color:#fff; margin-bottom:4px;">
+              Siap Menghilangkan Beban Opname Kertas KiiWii.Bee?
+            </h3>
+            <p style="font-size:0.83rem; color:var(--home-fg-2);">
+              Konfirmasi persetujuan scope &amp; kami jadwalkan kick-off langsung bersama Pak Dominicus Hadi.
+            </p>
+          </div>
+          <div style="display:flex; gap:10px;">
+            <button class="btn-action" style="background:var(--kiiwii-terracotta); color:#000; font-weight:800; border:none; padding:10px 18px;" onclick="goToSlide(3)">
+              🔥 Coba Demo Scanner Lagi
+            </button>
+          </div>
+        </div>
+
+        <div class="slide-footer-stamp">
+          <span>PT Fleek Group Indonesia // Contact: Dimitri Ahmad (Founder) &amp; Alif (Partnership)</span>
+          <span>Confidential — PT Fleek Group Indonesia — Fleek Project</span>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ============================================================
+       SLIDE DECK ENGINE & SIMULATOR SCRIPTS
+       ============================================================ -->
+  <script>
+    // --- Slide Controller State ---
+    let currentSlide = 0;
+    const totalSlides = 7;
+    let isTransitioning = false;
+
+    const slides = document.querySelectorAll('.slide-panel');
+    const slideCounter = document.getElementById('slideCounter');
+    const topProgressBar = document.getElementById('topProgressBar');
+    const navLinks = document.querySelectorAll('.nav-link');
+    const navDrawer = document.getElementById('navDrawer');
+    const navOverlay = document.getElementById('navOverlay');
+
+    function updateSlideUI() {
+      slides.forEach((slide, idx) => {
+        if (idx === currentSlide) {
+          slide.classList.add('active');
+          slide.scrollTop = 0;
+          anime({
+            targets: slide.querySelectorAll('.animate-text'),
+            translateY: [12, 0],
+            opacity: [0, 1],
+            easing: 'easeOutCubic',
+            duration: 450,
+            delay: anime.stagger(50)
+          });
+        } else {
+          slide.classList.remove('active');
+        }
+      });
+
+      // Update counter
+      slideCounter.textContent = `${String(currentSlide + 1).padStart(2, '0')} / ${String(totalSlides).padStart(2, '0')}`;
+
+      // Update progress bar
+      const pct = ((currentSlide + 1) / totalSlides) * 100;
+      topProgressBar.style.width = `${pct}%`;
+
+      // Update nav links
+      navLinks.forEach((link, idx) => {
+        if (idx === currentSlide) link.classList.add('active');
+        else link.classList.remove('active');
+      });
+    }
+
+    window.goToSlide = function(idx) {
+      if (idx < 0 || idx >= totalSlides || isTransitioning) return;
+      isTransitioning = true;
+      currentSlide = idx;
+      updateSlideUI();
+      closeNav();
+      setTimeout(() => { isTransitioning = false; }, 350);
+    };
+
+    window.nextSlide = function() {
+      if (currentSlide < totalSlides - 1) window.goToSlide(currentSlide + 1);
+    };
+
+    window.prevSlide = function() {
+      if (currentSlide > 0) window.goToSlide(currentSlide - 1);
+    };
+
+    // Keyboard Navigation
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === ' ') {
+        e.preventDefault();
+        window.nextSlide();
+      } else if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        window.prevSlide();
+      } else if (e.key === 'Escape') {
+        closeNav();
+      }
+    });
+
+    // Theme Toggle
+    const themeBtn = document.getElementById('themeToggleBtn');
+    themeBtn.addEventListener('click', () => {
+      const currentTheme = document.documentElement.getAttribute('data-theme');
+      const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+      document.documentElement.setAttribute('data-theme', newTheme);
+    });
+
+    // Print Deck
+    document.getElementById('printDeckBtn').addEventListener('click', () => {
+      window.print();
+    });
+
+    // Nav Drawer
+    function openNav() {
+      navDrawer.classList.add('open');
+      navOverlay.classList.add('open');
+    }
+    function closeNav() {
+      navDrawer.classList.remove('open');
+      navOverlay.classList.remove('open');
+    }
+    document.getElementById('navToggleBtn').addEventListener('click', openNav);
+    document.getElementById('closeNavBtn').addEventListener('click', closeNav);
+    navOverlay.addEventListener('click', closeNav);
+
+    // ============================================================
+    // WEB AUDIO API SYNTH ENGINE (BEEP SOUND GENERATOR)
+    // ============================================================
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    let audioCtx = null;
+
+    function initAudio() {
+      if (!audioCtx) audioCtx = new AudioContext();
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+    }
+
+    window.playBeepSuccess = function() {
+      initAudio();
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(850, audioCtx.currentTime); // 850 Hz jernih
+      gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.12);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start();
+      osc.stop(audioCtx.currentTime + 0.12);
+      if (navigator.vibrate) navigator.vibrate(50);
+    };
+
+    window.playBeepDouble = function() {
+      window.playBeepSuccess();
+      setTimeout(() => {
+        window.playBeepSuccess();
+      }, 140);
+      if (navigator.vibrate) navigator.vibrate([60, 50, 60]);
+    };
+
+    window.playBuzzError = function() {
+      initAudio();
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(220, audioCtx.currentTime); // 220 Hz low buzz
+      gain.gain.setValueAtTime(0.35, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.25);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start();
+      osc.stop(audioCtx.currentTime + 0.25);
+      if (navigator.vibrate) navigator.vibrate([150, 80, 150]);
+    };
+
+    // ============================================================
+    // INTERACTIVE TALLY SIMULATOR
+    // ============================================================
+    const tallyData = {
+      'K591BR': { name: 'Dress Polos Brown', target: 3, scanned: 0 },
+      'k407AR': { name: 'Atasan Rajut', target: 2, scanned: 0 },
+      'C122': { name: 'Cardigan No Color', target: 1, scanned: 0 },
+      'R214': { name: 'Rok Flare Spesial', target: 1, scanned: 0 }
+    };
+    let totalPcs = 0;
+    const totalTarget = 7;
+
+    window.adjustQty = function(rawKey, delta) {
+      const key = rawKey === 'R214 only' ? 'R214' : rawKey;
+      if (!tallyData[key]) return;
+
+      if (tallyData[key].scanned + delta < 0) return; // tidak bisa di bawah 0
+
+      tallyData[key].scanned += delta;
+      totalPcs += delta;
+
+      if (delta > 0) {
+        if (tallyData[key].scanned >= tallyData[key].target) {
+          window.playBeepDouble(); // Beep 2x jika pas/ganda
+        } else {
+          window.playBeepSuccess(); // Beep 1x normal
+        }
+      }
+
+      // Update UI
+      const lastText = document.getElementById('lastScannedText');
+      lastText.textContent = `${delta > 0 ? '+1' : '-1'} pcs // ${key} (${tallyData[key].name})`;
+      lastText.style.color = delta > 0 ? 'var(--kiiwii-green)' : 'var(--kiiwii-amber)';
+
+      document.getElementById(`scan-${key}`).textContent = `${tallyData[key].scanned} pcs`;
+      const diff = tallyData[key].scanned - tallyData[key].target;
+      const diffCell = document.getElementById(`diff-${key}`);
+      const badge = document.getElementById(`badge-${key}`);
+
+      if (diff === 0) {
+        diffCell.textContent = '0 (Klop)';
+        diffCell.style.color = 'var(--kiiwii-green)';
+        badge.textContent = 'Lengkap';
+        badge.className = 'pill pill-green';
+      } else if (diff > 0) {
+        diffCell.textContent = `+${diff} (Lebih)`;
+        diffCell.style.color = 'var(--kiiwii-amber)';
+        badge.textContent = 'Lebih';
+        badge.className = 'pill pill-amber';
+      } else {
+        diffCell.textContent = `${diff}`;
+        diffCell.style.color = 'var(--kiiwii-red)';
+        badge.textContent = 'Belum Lengkap';
+        badge.className = 'pill pill-red';
+      }
+
+      // Update overall
+      document.getElementById('totalPcsScanned').textContent = `${totalPcs} pcs`;
+      const totalDiff = totalPcs - totalTarget;
+      const totalVarEl = document.getElementById('totalVariance');
+      if (totalDiff === 0) {
+        totalVarEl.textContent = '0 (Klop)';
+        totalVarEl.style.color = 'var(--kiiwii-green)';
+      } else if (totalDiff > 0) {
+        totalVarEl.textContent = `+${totalDiff} pcs`;
+        totalVarEl.style.color = 'var(--kiiwii-amber)';
+      } else {
+        totalVarEl.textContent = `${totalDiff} pcs`;
+        totalVarEl.style.color = 'var(--kiiwii-red)';
+      }
+    };
+
+    window.simulateScan = function(sku, desc, target) {
+      if (sku === 'UNKNOWN-999') {
+        window.playBuzzError();
+        const lastText = document.getElementById('lastScannedText');
+        lastText.textContent = 'UNKNOWN SKU: UNKNOWN-999';
+        lastText.style.color = 'var(--kiiwii-red)';
+        return;
+      }
+
+      window.adjustQty(sku, 1);
+    };
+
+    window.resetDemoTally = function() {
+      totalPcs = 0;
+      for (const k in tallyData) {
+        tallyData[k].scanned = 0;
+        document.getElementById(`scan-${k}`).textContent = '0 pcs';
+        document.getElementById(`diff-${k}`).textContent = `-${tallyData[k].target}`;
+        document.getElementById(`diff-${k}`).style.color = 'var(--kiiwii-red)';
+        const badge = document.getElementById(`badge-${k}`);
+        badge.textContent = 'Belum Lengkap';
+        badge.className = 'pill pill-red';
+      }
+      document.getElementById('totalPcsScanned').textContent = '0 pcs';
+      document.getElementById('totalVariance').textContent = '-7 pcs';
+      document.getElementById('totalVariance').style.color = 'var(--kiiwii-red)';
+      document.getElementById('lastScannedText').textContent = 'Tally direset';
+      document.getElementById('lastScannedText').style.color = 'var(--home-fg-3)';
+    };
+
+    // ============================================================
+    // LIVE CAMERA CONTINUOUS SCANNER DEMO (HTML5-QRCODE)
+    // ============================================================
+    let html5QrCode = null;
+    let cameraActive = false;
+
+    window.toggleCameraDemo = function() {
+      const container = document.getElementById('cameraContainer');
+      const btn = document.getElementById('camToggleBtn');
+
+      if (!cameraActive) {
+        container.style.display = 'block';
+        btn.innerHTML = '🛑 <span>Matikan Kamera Scanner</span>';
+        btn.style.borderColor = 'var(--kiiwii-red)';
+        cameraActive = true;
+
+        if (!html5QrCode) {
+          html5QrCode = new Html5Qrcode("reader");
+        }
+
+        const config = {
+          fps: 15,
+          qrbox: { width: 250, height: 120 },
+          aspectRatio: 1.777,
+          formatsToSupport: [
+            Html5QrcodeSupportedFormats.CODE_128,
+            Html5QrcodeSupportedFormats.EAN_13,
+            Html5QrcodeSupportedFormats.QR_CODE
+          ]
+        };
+
+        html5QrCode.start(
+          { facingMode: "environment" },
+          config,
+          (decodedText) => {
+            const cleanText = decodedText.trim();
+            window.simulateScan(cleanText, 'Live Camera Decoded', 1);
+          },
+          (errorMessage) => {
+            // Frame parse error ignored
+          }
+        ).catch((err) => {
+          console.warn("Kamera tidak dapat diakses:", err);
+          alert("Kamera tidak dapat diakses atau izin ditolak di browser ini.");
+          window.toggleCameraDemo();
+        });
+      } else {
+        if (html5QrCode && html5QrCode.isScanning) {
+          html5QrCode.stop().then(() => {
+            container.style.display = 'none';
+            btn.innerHTML = '📷 <span>Aktifkan Scanner Kamera Live</span>';
+            btn.style.borderColor = '#323946';
+            cameraActive = false;
+          });
+        } else {
+          container.style.display = 'none';
+          btn.innerHTML = '📷 <span>Aktifkan Scanner Kamera Live</span>';
+          btn.style.borderColor = '#323946';
+          cameraActive = false;
+        }
+      }
+    };
+  </script>
+</body>
+</html>
